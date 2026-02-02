@@ -23,6 +23,7 @@ Antes de subir los archivos, debes poner los datos de TU red.
     # IMPORTANTE: Pon la dirección IP de la computadora que corre el GCS (el programa de control)
     MQTT_BROKER = "192.168.1.XX" 
     ```
+    *Nota: Si tienes una ESP32-CAM aparte, asegúrate de configurar su IP en el archivo `config.json` o `src/config.py` de la carpeta GCS, ya que este firmware es solo para el robot.*
 3.  Guarda el archivo.
 
 ## PASO 3: Subir los Archivos al Robot

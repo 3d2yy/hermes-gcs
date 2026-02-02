@@ -5,7 +5,8 @@ def load_config():
     default_config = {
         "mqtt_broker": "192.168.2.103",
         "mqtt_port": 1883,
-        "robot_ip": "192.168.2.100",
+        "robot_ip": "192.168.2.100", # Main ESP32 (Motors/Sensors)
+        "camera_ip": "192.168.2.101", # ESP32-CAM
         "camera_port": 81
     }
     try:
@@ -26,4 +27,5 @@ CONFIG = load_config()
 MQTT_BROKER = CONFIG["mqtt_broker"]
 MQTT_PORT = CONFIG["mqtt_port"]
 ROBOT_IP = CONFIG["robot_ip"]
+CAMERA_IP = CONFIG.get("camera_ip", ROBOT_IP) # Fallback to robot_ip if not set
 CAMERA_PORT = CONFIG["camera_port"]
