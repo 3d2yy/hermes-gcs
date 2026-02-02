@@ -33,7 +33,9 @@ Los archivos son:
 1.  `config.py` (¡Con tus cambios del Paso 2!)
 2.  `drivers.py`
 3.  `main.py`
-4.  `MPU6050.py`
+4.  `drivers.py`
+5.  `pid.py`    <-- **¡NUEVO!** Control de estabilidad.
+6.  `MPU6050.py`
 
 **En Thonny:**
 *   A la izquierda verás "Este ordenador" y la carpeta `firmware`.

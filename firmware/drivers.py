@@ -146,6 +146,25 @@ class MotorDriver:
         self._write_pcf(ADDR_PCF_MOTORS_1, pcf1)
         self._write_pcf(ADDR_PCF_MOTORS_2, pcf2)
 
+    def set_speed_differential(self, adj_left, adj_right):
+        """
+        Adjust motor speeds relative to MAX_PWM (1023) or current set.
+        Used by PID controller to steer.
+        adj_left: Signed Int (e.g. +50 or -50)
+        adj_right: Signed Int
+        """
+        # Base speed for FORWARD is 1023
+        base = 1023
+        
+        l_speed = max(0, min(1023, int(base + adj_left)))
+        r_speed = max(0, min(1023, int(base + adj_right)))
+        
+        # M1, M2 are Left. M3, M4 are Right.
+        self.motors[1].duty(l_speed)
+        self.motors[2].duty(l_speed)
+        self.motors[3].duty(r_speed)
+        self.motors[4].duty(r_speed)
+
 
 # ============================================================================
 # MQ-2 SENSOR DRIVER (via ADS1115)
