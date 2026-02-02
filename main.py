@@ -20,7 +20,7 @@ except ImportError:
     print("⚠️ scipy not installed. Gas heatmap interpolation will be basic.")
 
 # Import internal modules
-from src.config import CONFIG, ROBOT_IP, CAMERA_PORT, MQTT_BROKER
+from src.config import CONFIG, CAMERA_PORT
 from src.state import state, db_manager # db_manager starts automatically
 from src.services.mqtt import start_mqtt, publish_command
 from src.services.replay import replay_service
@@ -141,28 +141,34 @@ def fast_update_global(n):
             f"{rssi} dBm", rssi_pct, alert_banner)
 
 # Callbacks for Connection Modal
+# Callbacks for Connection Modal
 @app.callback(
     Output("connection-modal", "opened"),
-    Output("connection-status", "children"),
     Input("btn-connect-system", "n_clicks"),
     Input("btn-simulate", "n_clicks"),
+    Input("btn-reopen-modal", "n_clicks"),
     State("input-broker-ip", "value"),
     State("input-camera-ip", "value"),
     prevent_initial_call=True
 )
-def handle_connection(n_connect, n_simulate, broker_ip, camera_ip):
+def handle_connection(n_connect, n_simulate, n_reopen, broker_ip, camera_ip):
     ctx = dash.callback_context
     if not ctx.triggered: return dash.no_update
     btn_id = ctx.triggered[0]["prop_id"].split(".")[0]
     
+    if btn_id == "btn-reopen-modal":
+        return True
+    
     if btn_id == "btn-simulate":
         state.log("Iniciando Modo Simulado", "INFO")
+        state.status["connection"] = "SIMULATED"
         start_simulation()
-        return False, dmc.Badge("SIMULACIÓN", color="orange")
+        return False
         
     if btn_id == "btn-connect-system":
         if not broker_ip: return dash.no_update
         state.log(f"Conectando a {broker_ip}...", "INFO")
+        state.status["connection"] = "CONNECTING..."
         
         # Update Runtime Config
         CONFIG["mqtt_broker"] = broker_ip
@@ -171,7 +177,7 @@ def handle_connection(n_connect, n_simulate, broker_ip, camera_ip):
         # Actually start MQTT now
         threading.Thread(target=lambda: start_mqtt(broker_ip), daemon=True).start()
         
-        return False, dmc.Badge("CONECTANDO...", color="yellow")
+        return False
     
     return dash.no_update
 
@@ -494,8 +500,10 @@ def update_teleop_metrics(n):
     prevent_initial_call=True
 )
 def update_video_source(n, current_src):
-    is_sim = state.status["mode"] in ["SIMULACIÓN", "REPLAY FILE", "ESPERANDO"]
-    target_src = "/video_feed_local" if is_sim else f"http://{ROBOT_IP}:{CAMERA_PORT}/stream"
+    is_sim = state.status["mode"] in ["SIMULACIÓN", "REPLAY FILE", "ESPERANDO", "SIMULATED"]
+    # Use CONFIG dictionary to get current IPs instead of stale constants
+    target_ip = CONFIG.get("camera_ip", CONFIG.get("mqtt_broker", "127.0.0.1"))
+    target_src = "/video_feed_local" if is_sim else f"http://{target_ip}:{CAMERA_PORT}/stream"
     if current_src != target_src:
         return target_src
     return dash.no_update
@@ -511,4 +519,4 @@ if __name__ == "__main__":
     
     print("🚀 H.E.R.M.E.S. Ground Control Station v2.0 (Modular) Starting...")
     print("Waiting for Connection Modal input...")
-    app.run_server(debug=True, port=8050)
+    app.run(debug=True, port=8050)

@@ -2,7 +2,7 @@ from dash import html, dcc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from src.ui.app_layout import COLORS
-from src.config import ROBOT_IP, CAMERA_PORT, CAMERA_IP
+from src.config import CONFIG
 
 def create_control_pad():
     return html.Div(style={
@@ -35,7 +35,8 @@ def view_teleop():
                 dmc.Badge(id="camera-status", color="gray", children="DESCONECTADO"),
             ]),
             html.Div(className="video-container", children=[
-                html.Img(id="video-feed", src=f"http://{CAMERA_IP}:{CAMERA_PORT}/stream",
+                html.Img(id="video-feed", 
+                    src=f"http://{CONFIG.get('camera_ip', CONFIG.get('mqtt_broker', '127.0.0.1'))}:{CONFIG['camera_port']}/stream",
                     style={"width": "100%", "height": "100%", "objectFit": "contain"},
                     alt="Esperando señal de video..."),
                 html.Div(className="video-overlay"),

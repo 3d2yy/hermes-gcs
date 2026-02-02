@@ -80,6 +80,8 @@ def create_sidebar():
             *[html.Button([DashIconify(icon=icon, width=20), html.Span(label)],
                 id={"type": "nav-btn", "index": view_id}, className="nav-button")
               for view_id, label, icon in nav_items],
+            html.Button([DashIconify(icon="mdi:cog", width=20), html.Span("Configurar Conexión")],
+                id="btn-reopen-modal", className="nav-button", style={"marginTop": "10px", "border": f"1px solid {COLORS['accent_secondary']}"}),
             html.Div(style={"flex": "1"}),
         html.Div(className="gcs-card", style={"padding": "12px"}, children=[
             html.Div(style={"display": "flex", "justifyContent": "space-between", "marginBottom": "8px"}, children=[
@@ -124,13 +126,13 @@ def get_layout():
                 closeOnEscape=False,
                 withCloseButton=False,
                 centered=True,
-                title=dmc.Title("Conexión Hermes GCS", order=3, style={"fontFamily": "'Orbitron'"}),
+                title="Conexión Hermes GCS",
                 children=[
-                    dmc.Text("Ingrese las direcciones IP para conectar.", size="sm", color="dimmed", style={"marginBottom": 16}),
+                    dmc.Text("Ingrese las direcciones IP para conectar.", size="sm", c="dimmed", style={"marginBottom": 16}),
                     dmc.TextInput(id="input-broker-ip", label="MQTT Broker / Robot IP", value=CONFIG["mqtt_broker"], style={"marginBottom": 10}),
                     dmc.TextInput(id="input-camera-ip", label="Cámara IP (ESP32-CAM)", value=CONFIG.get("camera_ip", CONFIG["mqtt_broker"]), style={"marginBottom": 20}),
                     
-                    dmc.Group(position="right", spacing="sm", children=[
+                    dmc.Group(justify="flex-end", gap="sm", children=[
                         dmc.Button("Modo Simulado", id="btn-simulate", variant="subtle", color="gray"),
                         dmc.Button("Conectar", id="btn-connect-system", color="teal"),
                     ])
