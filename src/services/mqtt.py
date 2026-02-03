@@ -100,6 +100,12 @@ def start_mqtt(broker_host=None):
             client = mqtt.Client()
         
         global mqtt_client
+        if mqtt_client:
+            try:
+                mqtt_client.loop_stop()
+                mqtt_client.disconnect()
+            except:
+                pass
         mqtt_client = client
         
         client.on_connect = on_mqtt_connect
