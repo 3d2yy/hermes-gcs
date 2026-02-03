@@ -13,6 +13,9 @@ class ReplayService:
         self.speed = 1.0 # 1x speed
         self.current_index = 0
         self.data_buffer = []
+        self.progress = 0  # 0-100 percent
+        self.current_time_str = "00:00"
+        self.total_time_str = "00:00"
         
     def load_mission_data(self):
         """Loads all sensor data from the DB for replay."""
@@ -22,6 +25,17 @@ class ReplayService:
             c.execute("SELECT timestamp, ppm, co2, temperature, humidity, voltage, current FROM sensors ORDER BY timestamp ASC")
             self.data_buffer = c.fetchall()
             conn.close()
+            
+            # Calculate total duration
+            if len(self.data_buffer) >= 2:
+                try:
+                    start = datetime.datetime.fromisoformat(self.data_buffer[0][0])
+                    end = datetime.datetime.fromisoformat(self.data_buffer[-1][0])
+                    total_secs = int((end - start).total_seconds())
+                    self.total_time_str = f"{total_secs // 60:02d}:{total_secs % 60:02d}"
+                except:
+                    self.total_time_str = "??:??"
+            
             state.log(f"Misión cargada para Replay: {len(self.data_buffer)} puntos de datos", "SUCCESS")
             return True
         except Exception as e:
@@ -47,6 +61,8 @@ class ReplayService:
     def stop_replay(self):
         self.running = False
         self.current_index = 0
+        self.progress = 0
+        self.current_time_str = "00:00"
         state.status["mode"] = "INIT"
         state.log("Replay detenido.", "INFO")
 
@@ -86,10 +102,17 @@ class ReplayService:
                     timestamp=current_timestamp
                 )
                 
-                # Update progress in logs occasionally
-                if self.current_index % 50 == 0:
-                    prog = int((self.current_index / len(self.data_buffer)) * 100)
-                    # Optional: log progress? Maybe too noisy.
+                # Update progress
+                self.progress = int((self.current_index / len(self.data_buffer)) * 100)
+                
+                # Calculate elapsed time
+                if self.data_buffer:
+                    try:
+                        start = datetime.datetime.fromisoformat(self.data_buffer[0][0])
+                        elapsed_secs = int((current_timestamp - start).total_seconds())
+                        self.current_time_str = f"{elapsed_secs // 60:02d}:{elapsed_secs % 60:02d}"
+                    except:
+                        pass
                 
                 self.current_index += 1
                 

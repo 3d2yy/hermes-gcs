@@ -58,8 +58,8 @@ def on_mqtt_message(client, userdata, msg):
             state.update_sensor_data(ppm=ppm, volt=volt)
             state.add_gas_reading(state.robot_position["x"], state.robot_position["y"], ppm)
             
-            status = sensor_data.get("alert_status", "normal")
-            state.status["alert_level"] = "CRITICAL" if status != "Normal" else "NORMAL"
+            status = sensor_data.get("alert_status", "normal").lower()
+            state.status["alert_level"] = "CRITICAL" if status != "normal" else "NORMAL"
 
         elif "iot/sensor/mq2/alert" in topic:
             state.log(f"ALERTA MQ-2: {payload.get('message')}", "WARN")

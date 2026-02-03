@@ -2,32 +2,6 @@ from dash import html, dcc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from src.ui.app_layout import COLORS
-try:
-    from src.state import state
-except ImportError:
-    # If state isn't directly importable here due to some reason (circular?), we rely on callbacks
-    # But callbacks are in main.py, so this file is mostly layout.
-    # However, view_gas_map might need state if it renders initial state?
-    # Actually main.py passes state to callbacks. view_gas_map function usually just returns layout.
-    # checking original view_gas_map content: it used 'state' inside the function?
-    pass
-
-# Wait, view_gas_map used 'state' in update_gas_map callback, which is now in main.py.
-# The layout function `view_gas_map` didn't seem to use state directly in the layout construction
-# EXCEPT for the graph ID and static structure.
-# Let's check the original content I wrote in step 98.
-# It accessed `state.robot_position` etc? No, wait.
-# Step 98: `view_gas_map` function used `state.gas_map_points`? No.
-# It defines layout. The dynamic content is updated by callbacks.
-# Ah, Step 14 callback `update_gas_map` is in `main.py` now.
-# So `view_gas_map` just returns static layout with IDs.
-# Does `view_gas_map` need state?
-# Step 98 code: 
-# def view_gas_map():
-#    ... children=[ ... dcc.Graph(id="gas-heatmap" ...) ]
-# It does NOT use `state`. It just uses `COLORS`.
-# BUT wait, the `update_gas_map` callback IS in main.py.
-# So `view_gas_map.py` only needs `COLORS`.
 
 def view_gas_map():
     return html.Div(style={"display": "flex", "gap": "20px", "height": "100%"}, children=[

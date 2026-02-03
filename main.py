@@ -8,8 +8,6 @@ import flask
 import datetime
 import numpy as np
 import plotly.graph_objects as go
-import random
-import requests
 import math
 
 try:
@@ -52,17 +50,20 @@ app.layout = get_layout()
 # ═══════════════════════════════════════════════════════════════════════════════
 def gen_frames():
     cap = cv2.VideoCapture(0)
-    while True:
-        success, frame = cap.read()
-        if not success:
-            break
-        else:
-            cv2.putText(frame, "SIMULATION MODE - LOCAL CAMERA", (10, 30), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 136), 2)
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+    try:
+        while True:
+            success, frame = cap.read()
+            if not success:
+                break
+            else:
+                cv2.putText(frame, "SIMULATION MODE - LOCAL CAMERA", (10, 30), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 136), 2)
+                ret, buffer = cv2.imencode('.jpg', frame)
+                frame = buffer.tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+    finally:
+        cap.release()
 
 @app.server.route('/video_feed_local')
 def video_feed_local():
@@ -141,7 +142,6 @@ def fast_update_global(n):
             f"{rssi} dBm", rssi_pct, alert_banner)
 
 # Callbacks for Connection Modal
-# Callbacks for Connection Modal
 @app.callback(
     Output("connection-modal", "opened"),
     Input("btn-connect-system", "n_clicks"),
@@ -210,6 +210,15 @@ def control_replay(play, pause, stop, load):
         else:
             return "❌ Error al cargar datos. Verifique DB."
     return ""
+
+@app.callback(
+    [Output("replay-progress", "value"), Output("replay-time-current", "children"), 
+     Output("replay-time-total", "children")],
+    [Input("interval-slow", "n_intervals")],
+    prevent_initial_call=True
+)
+def update_replay_progress(n):
+    return replay_service.progress, replay_service.current_time_str, replay_service.total_time_str
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SENSOR GRAPHS CALLBACKS
@@ -366,9 +375,10 @@ def update_gas_map(n, view_mode, show_grid, show_heatmap, show_path):
             fig.add_trace(go.Scatter(x=[p[0] for p in path], y=[p[1] for p in path], mode='lines',
                 line=dict(color=COLORS['accent_secondary'], width=2, dash='dot'), showlegend=False, uid="path_trace"))
         
-        # Robot Triangle
+        # Robot Triangle (pointing forward)
         size = 1.5
-        angles = [rt, rt + 2.5, rt - 2.5]
+        # Use 2*pi/3 (~120°) for equilateral triangle pointing in direction of theta
+        angles = [rt, rt + math.pi * 2/3, rt - math.pi * 2/3]
         fig.add_trace(go.Scatter(x=[rx + size * math.cos(a) for a in angles] + [rx + size * math.cos(rt)],
             y=[ry + size * math.sin(a) for a in angles] + [ry + size * math.sin(rt)],
             mode='lines', fill='toself', fillcolor=COLORS['accent_primary'],
@@ -411,8 +421,14 @@ def clear_gas_map(n):
     prevent_initial_call=True
 )
 def update_acoustic(n):
-    direction = f"{state.acoustic_detections[0].get('direction', 0):.0f}°" if state.acoustic_detections and state.acoustic_detections[0].get('direction') else "N/A"
-    count = sum(1 for d in state.acoustic_detections if d["class"] in ["SCREAM", "BREATHING", "VOICE", "GLASS_BREAK"])
+    # Safely access first detection's direction
+    direction = "N/A"
+    if state.acoustic_detections:
+        first_detection = state.acoustic_detections[0]
+        if first_detection.get('direction') is not None:
+            direction = f"{first_detection['direction']:.0f}°"
+    
+    count = sum(1 for d in state.acoustic_detections if d.get("class") in ["SCREAM", "BREATHING", "VOICE", "GLASS_BREAK"])
     
     fig_conf = go.Figure()
     fig_conf.add_trace(go.Scatter(y=list(state.audio_confidence), fill='tozeroy',
@@ -477,6 +493,48 @@ def clear_logs(n):
         state.logs.clear()
         state.log("Registros limpiados", "INFO")
     return None
+
+@app.callback(
+    Output("btn-export-logs", "n_clicks"),
+    [Input("btn-export-logs", "n_clicks")],
+    prevent_initial_call=True
+)
+def export_logs(n):
+    if n:
+        try:
+            import os
+            logs_content = "\n".join(list(state.logs))
+            filename = f"hermes_logs_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            filepath = os.path.join(os.getcwd(), filename)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(f"H.E.R.M.E.S. GCS - Log Export\n")
+                f.write(f"Fecha: {datetime.datetime.now().isoformat()}\n")
+                f.write("=" * 50 + "\n\n")
+                f.write(logs_content)
+            state.log(f"Logs exportados a: {filename}", "SUCCESS")
+        except Exception as e:
+            state.log(f"Error exportando logs: {e}", "ERROR")
+    return None
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SENSOR VIEW SPECIFIC CALLBACKS
+# ═══════════════════════════════════════════════════════════════════════════════
+@app.callback(
+    [Output("sensor-ppm", "children"), Output("sensor-co2", "children"),
+     Output("sensor-temp", "children"), Output("sensor-humidity", "children"),
+     Output("sensor-voltage", "children"), Output("sensor-current", "children")],
+    [Input("interval-fast", "n_intervals")],
+    prevent_initial_call=True
+)
+def update_sensor_cards(n):
+    return (
+        str(int(state.current_values["ppm"])),
+        str(int(state.current_values["co2"])),
+        f"{state.current_values['temperature']:.1f}",
+        f"{state.current_values['humidity']:.1f}",
+        f"{state.current_values['voltage']:.2f}",
+        f"{state.current_values['current']:.2f}"
+    )
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TELEOP SPECIFIC CALLBACKS
