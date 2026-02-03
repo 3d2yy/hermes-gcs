@@ -41,6 +41,13 @@ PIN_I2C_SDA = 21
 PIN_I2C_SCL = 22
 I2C_FREQ = 100000
 
+# Aliases for compatibility with older scripts
+I2C_SDA_PIN = PIN_I2C_SDA
+I2C_SCL_PIN = PIN_I2C_SCL
+I2C_FREQUENCY = I2C_FREQ
+MQ2_SDA_PIN = PIN_I2C_SDA
+MQ2_SCL_PIN = PIN_I2C_SCL
+
 # Direcciones I2C Identificadas
 ADDR_PCF_MOTORS_1 = 0x20 # Motores 1 y 2
 ADDR_PCF_MOTORS_2 = 0x21 # Motores 3 y 4
