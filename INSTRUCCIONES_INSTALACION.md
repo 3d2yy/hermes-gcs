@@ -1,4 +1,4 @@
-# GUÍA DE INSTALACIÓN Y PRUEBAS - HERMES GCS v2
+# GUÍA DE INSTALACIÓN Y PRUEBAS - HERMES GCS v2.2 (Final)
 
 Esta guía es para configurar el robot (ESP32) con el nuevo código mejorado.
 
@@ -22,8 +22,12 @@ Antes de subir los archivos, debes poner los datos de TU red.
     
     # IMPORTANTE: Pon la dirección IP de la computadora que corre el GCS (el programa de control)
     MQTT_BROKER = "192.168.1.XX" 
+    
+    # CONFIGURACIÓN SEGURA (Puesto por defecto en v2.2)
+    MQTT_USER = "hermes_robot"
+    MQTT_PASSWORD = "hermes_password"
     ```
-    *Nota: Si tienes una ESP32-CAM aparte, asegúrate de configurar su IP en el archivo `config.json` o `src/config.py` de la carpeta GCS, ya que este firmware es solo para el robot.*
+    *Nota: Si tienes una ESP32-CAM aparte, asegúrate de configurar su IP en el archivo `config.json` o `src/config.py` de la carpeta GCS.*
 3.  Guarda el archivo.
 
 ## PASO 3: Subir los Archivos al Robot
@@ -34,9 +38,8 @@ Los archivos son:
 1.  `config.py` (¡Con tus cambios del Paso 2!)
 2.  `drivers.py`
 3.  `main.py`
-4.  `drivers.py`
-5.  `pid.py`    <-- **¡NUEVO!** Control de estabilidad.
-6.  `MPU6050.py`
+4.  `pid.py`    - Control de estabilidad PID.
+5.  `MPU6050.py` - Driver del sensor inercial.
 
 **En Thonny:**
 *   A la izquierda verás "Este ordenador" y la carpeta `firmware`.
@@ -48,11 +51,13 @@ Los archivos son:
 1.  En Thonny, presiona el botón **Reset** del ESP32 (o desconecta y conecta el USB).
 2.  Mira la consola de Thonny (abajo). Deberías ver algo así:
     ```
-    [BOOT] Initializing Hardware...
-    [WIFI] Connected: 192.168.1.45  <-- ¡Asegúrate que diga Connected!
-    [MQTT] Connecting to...
+    [   1.42] 🟢 SUCCESS | Config loaded OK (v2.2)
+    [   2.10] 🔵 INFO    | Connecting to WiFi...
+    [   5.32] 🟢 SUCCESS | Connected: 192.168.1.45  <-- ¡Asegúrate que diga Connected!
+    [   6.15] 🔵 INFO    | Connecting to MQTT broker...
+    [   7.20] 🟢 SUCCESS | MQTT Connected!
     ```
-    *   Si dice `[MQTT] Connected`, ¡El robot está listo y conectado a tu PC!
+    *   Si ves los **iconos de colores**, el nuevo sistema de logs estructurados está funcionando.
 
 ## PASO 5: Usar el GCS (Programa de Control)
 

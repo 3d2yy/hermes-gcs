@@ -5,6 +5,9 @@ def load_config():
     default_config = {
         "mqtt_broker": "192.168.2.103",
         "mqtt_port": 1883,
+        "mqtt_user": "hermes_robot",
+        "mqtt_pass": "hermes_password",
+        "protocol_version": "2.2",
         "robot_ip": "192.168.2.100", # Main ESP32 (Motors/Sensors)
         "camera_ip": "192.168.2.101", # ESP32-CAM
         "camera_port": 81
@@ -26,6 +29,9 @@ CONFIG = load_config()
 
 MQTT_BROKER = CONFIG["mqtt_broker"]
 MQTT_PORT = CONFIG["mqtt_port"]
+MQTT_USER = CONFIG.get("mqtt_user")
+MQTT_PASS = CONFIG.get("mqtt_pass")
+PROTOCOL_VERSION = CONFIG.get("protocol_version", "2.1")
 ROBOT_IP = CONFIG["robot_ip"]
 CAMERA_IP = CONFIG.get("camera_ip", ROBOT_IP) # Fallback to robot_ip if not set
 CAMERA_PORT = CONFIG["camera_port"]

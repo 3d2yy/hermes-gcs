@@ -10,6 +10,7 @@ SAFE_START = False  # True para iniciar sin ejecutar loop principal (modo seguro
 DEBUG_ENABLED = True
 DEVICE_NAME = "ESP32-Robot-MultiSensor-MQ2-01"
 LOCATION = "Lab-Principal"
+PROTOCOL_VERSION = "2.2"  # Versión del protocolo de comunicación
 
 # ========================
 # CONFIGURACIÓN WIFI
@@ -23,8 +24,8 @@ WIFI_TIMEOUT = 30  # segundos
 # ========================
 MQTT_BROKER = "192.168.2.103"
 MQTT_PORT = 1883                        
-MQTT_USER = None
-MQTT_PASSWORD = None
+MQTT_USER = "hermes_robot"     # CAMBIAR SEGÚN TU BROKER
+MQTT_PASSWORD = "hermes_password" # CAMBIAR SEGÚN TU BROKER
 MQTT_KEEPALIVE = 180  # segundos
 
 # ========================
