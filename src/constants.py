@@ -47,19 +47,20 @@ class AudioClass:
 # Tópicos MQTT
 class MQTTTopics:
     """Tópicos MQTT utilizados por el sistema."""
+    # Dispositivo
+    STATUS = "iot/device/status"
+    CONTROL = "iot/device/control"
+    HEARTBEAT = "iot/device/heartbeat"
+
     # Sensores
     MQ2_DATA = "iot/sensor/mq2/data"
     MQ2_ALERT = "iot/sensor/mq2/alert"
-    ENVIRONMENT = "hermes/sensors/environment"
+    ENVIRONMENT = "iot/sensor/data"
+    IMU = "iot/sensor/mpu6050/data"
+    ULTRASONIC = "iot/device/sensor/ultrasonic"
+    
+    # Compatibilidad y otros módulos
     POWER = "hermes/sensors/power"
-    IMU = "hermes/sensors/imu"
-    
-    # IA/Audio
     AUDIO = "hermes/ai/audio"
-    
-    # Posición y navegación
     POSITION = "hermes/position"
     RADAR = "hermes/radar"
-    
-    # Control
-    CONTROL = "hermes/control"

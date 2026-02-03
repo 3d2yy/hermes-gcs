@@ -1,87 +1,300 @@
 """
-Configuración para ESP32 - HERMES GCS v2
-Mantiene la compatibilidad estricta con el hardware original (Legacy Pinout).
+Archivo de configuración para ESP32 Robot Controller + Sensores Multi-propósito
+Versión Unificada - Control de Robot con MPU6050, Ultrasónico, SCD30 y MQ-2
 """
 
 # ========================
-# INFO DEL DISPOSITIVO
+# CONFIGURACIÓN GENERAL
 # ========================
-DEVICE_NAME = "HERMES_ROBOT_01"
+SAFE_START = False  # True para iniciar sin ejecutar loop principal (modo seguro)
+DEBUG_ENABLED = True
+DEVICE_NAME = "ESP32-Robot-MultiSensor-MQ2-01"
 LOCATION = "Lab-Principal"
 
 # ========================
-# WIFI & MQTT
+# CONFIGURACIÓN WIFI
 # ========================
 WIFI_SSID = "ROBMA"
 WIFI_PASSWORD = "ROBMA2023"
-WIFI_TIMEOUT = 30 
+WIFI_TIMEOUT = 30  # segundos
 
+# ========================  
+# CONFIGURACIÓN MQTT
+# ========================
 MQTT_BROKER = "192.168.2.103"
-MQTT_PORT = 1883
+MQTT_PORT = 1883                        
 MQTT_USER = None
 MQTT_PASSWORD = None
-MQTT_KEEPALIVE = 60
-
-# Topics Hermes GCS v2
-TOPIC_CONTROL = "hermes/control"        # Comandos (move:FORWARD, etc)
-TOPIC_TELEMETRY = "hermes/status"       # Estado general
-TOPIC_ENV = "hermes/sensors/environment" # CO2, Temp, Hum
-TOPIC_POWER = "hermes/sensors/power"     # Voltaje, Corriente
-TOPIC_IMU = "hermes/sensors/imu"         # MPU6050
-TOPIC_RADAR = "hermes/radar"             # Ultrasonico (Array simulado)
-TOPIC_GAS = "iot/sensor/mq2/data"        # Legacy topic support for gas
-TOPIC_GAS_ALERT = "iot/sensor/mq2/alert" 
+MQTT_KEEPALIVE = 180  # segundos
 
 # ========================
-# HARDWARE / PINS (LEGACY)
+# TOPICS MQTT - ROBOT
 # ========================
+TOPIC_STATUS = "iot/device/status" 
+TOPIC_COMMAND = "iot/device/control"
+TOPIC_HEARTBEAT = "iot/device/heartbeat"
 
-# I2C Bus (SCD30, MPU6050, ADS1115, PCF8574, Motores)
-PIN_I2C_SDA = 21
-PIN_I2C_SCL = 22
-I2C_FREQ = 100000
+# ========================
+# TOPICS MQTT - SENSORES
+# ========================
+TOPIC_ULTRASONIC = "iot/device/sensor/ultrasonic"
+TOPIC_MPU_DATA = "iot/sensor/mpu6050/data"
+TOPIC_MPU_STATUS = "iot/sensor/mpu6050/status"
+TOPIC_MPU_HEARTBEAT = "iot/sensor/mpu6050/heartbeat"
+TOPIC_SCD30_DATA = "iot/sensor/data"
+TOPIC_SCD30_STATUS = "iot/sensor/status"
+TOPIC_SCD30_HEARTBEAT = "iot/sensor/scd30/heartbeat"
+TOPIC_MQ2_STATUS = "iot/sensor/mq2/status"
+TOPIC_MQ2_DATA = "iot/sensor/mq2/data"
+TOPIC_MQ2_ALERT = "iot/sensor/mq2/alert"
 
-# Aliases for compatibility with older scripts
-I2C_SDA_PIN = PIN_I2C_SDA
-I2C_SCL_PIN = PIN_I2C_SCL
-I2C_FREQUENCY = I2C_FREQ
-MQ2_SDA_PIN = PIN_I2C_SDA
-MQ2_SCL_PIN = PIN_I2C_SCL
+# ========================
+# CONFIGURACIÓN HARDWARE - I2C
+# ========================
+# Pines I2C (compartidos entre todos los dispositivos)
+I2C_SCL_PIN = 22
+I2C_SDA_PIN = 21
+I2C_FREQUENCY = 100000
 
-# Direcciones I2C Identificadas
-ADDR_PCF_MOTORS_1 = 0x20 # Motores 1 y 2
-ADDR_PCF_MOTORS_2 = 0x21 # Motores 3 y 4
-ADDR_ULTRASONIC = 0x23   
-ADDR_ADS1115 = 0x48      # MQ-2 ADC
-ADDR_SCD30 = 0x61        # CO2
-ADDR_MPU6050 = 0x68      # IMU
-
-# Motores (PWM Directo + PCF8574 para dirección)
-# PWM Pins
-PIN_MOTOR_1 = 16
-PIN_MOTOR_2 = 17
-PIN_MOTOR_3 = 18
-PIN_MOTOR_4 = 19
-PWM_FREQ = 1000
-
-# Mapa de bits PCF8574 para dirección
-# (Copiado exactamente del archivo 'config (2).py')
-PCF_CONTROL_BITS = {
-    "m1_horario": 0b11110110,
-    "m1_antihorario": 0b11111010,
-    "m2_horario": 0b11100111,
-    "m2_antihorario": 0b11011011,
-    "m3_horario": 0b11111010,
-    "m3_antihorario": 0b11110110, 
-    "m4_horario": 0b11011011,
-    "m4_antihorario": 0b11100111,
+# ========================
+# CONFIGURACIÓN HARDWARE - MOTORES
+# ========================
+# Pines PWM de motores
+MOTOR_PINS = {
+    1: 23,  # Motor 1 - GPIO 23 (IZ)
+    2: 17,  # Motor 2 - GPIO 17 (IZ)  
+    3: 19,  # Motor 3 - GPIO 19 (DE)
+    4: 18   # Motor 4 - GPIO 18 (DE)
 }
 
-# Configuración MQ-2 (Gas)
-MQ2_CHANNEL = 0   # Canal 0 del ADS1115
-MQ2_RL_VALUE = 10.0
-MQ2_RO_CLEAN_AIR_FACTOR = 9.83
+# Frecuencia PWM
+PWM_FREQUENCY = 1000
 
-# Configuración Ultrasonico (PCF8574 based)
-ULTRASONIC_TRIG_BIT = 2
-ULTRASONIC_ECHO_BIT = 1
+# Direcciones I2C PCF8574 (Control de dirección de motores)
+PCF8574_ADDRESSES = {
+    1: 0x20,  # PCF1 - Motores IZ (1 y 2)
+    2: 0x24   # PCF2 - Motores DE (3 y 4)
+}
+
+# ========================
+# CONFIGURACIÓN SENSOR ULTRASÓNICO
+# ========================
+ULTRASONIC_ADDR = 0x26  # Dirección I2C del sensor (En ESP32-CAM Board)
+TRIG_BIT = 6            # Bit P6 para el trigger
+ECHO_BIT = 5            # Bit P5 para el echo
+SOUND_SPEED = 0.0343    # cm/μs
+ULTRASONIC_INTERVAL = 1000  # ms entre mediciones
+
+# ========================
+# CONFIGURACIÓN SENSOR MPU6050
+# ========================
+MPU6050_ADDR = 0x68  # Dirección I2C del MPU6050
+MPU_READ_INTERVAL = 1.0  # segundos entre lecturas del MPU6050
+
+# ========================
+# CONFIGURACIÓN SENSOR SCD30
+# ========================
+SCD30_ADDRESS = 0x61  # Dirección I2C del SCD30
+SCD30_READ_INTERVAL = 5  # segundos entre lecturas
+
+# ========================
+# CALIBRACIÓN SENSOR SCD30
+# ========================
+SENSOR_CALIBRATION = {
+    "temperature_offset": -3,
+    "humidity_slope": 1.3956,
+    "humidity_intercept": -22.985
+}
+
+# ========================
+# CONFIGURACIÓN SENSOR MQ-2 (GAS/HUMO)
+# ========================
+# Configuración ADS1115 (Conversor ADC para MQ-2)
+ADS1115_ADDR = 0x48
+MQ2_SDA_PIN = 21  # Usa el mismo bus I2C
+MQ2_SCL_PIN = 22  # Usa el mismo bus I2C
+MQ2_CHANNEL = 0   # Canal del ADS1115 para el MQ-2
+MQ2_GAIN = 0x0200  # GAIN_ONE (±4.096V)
+
+# Parámetros del sensor MQ-2
+MQ2_RL = 10.0  # Resistencia de carga en kilo-ohms
+MQ2_RO_CLEAN_AIR = 9.8  # Relación RS/R0 en aire limpio
+MQ2_VOLTAGE_SUPPLY = 5.0  # Voltaje de alimentación
+
+# Parámetros para cálculo de humo (Smoke)
+MQ2_SMOKE_M = -0.485  # Pendiente para humo
+MQ2_SMOKE_B = 1.51   # Intersección para humo
+
+# Umbrales para alertas de humo (en PPM)
+SMOKE_THRESHOLDS = {
+    "normal": 200,      # PPM - Aire limpio, niveles seguros
+    "advertencia": 500, # PPM - Presencia detectable de humo
+    "peligro": 1000,    # PPM - Concentración peligrosa
+    "critico": 2000     # PPM - Nivel extremadamente peligroso
+}
+
+# Registros ADS1115
+ADS1115_REG_CONFIG = 0x01
+ADS1115_REG_CONVERSION = 0x00
+
+# Configuración MUX para canales ADS1115
+ADS1115_MUX_CONFIG = [0x4000, 0x5000, 0x6000, 0x7000]
+
+# Intervalo de lectura del MQ-2
+MQ2_READ_INTERVAL = 2  # segundos entre lecturas
+
+# ========================
+# BITS DE CONTROL PCF8574
+# ========================
+PCF_CONTROL_BITS = {
+    "m1_horario": 0b11110110,           # ~0b00000101
+    "m1_antihorario": 0b11111010,       # ~0b00001001
+    "m2_horario": 0b11100111 ,          # ~0b00100100
+    "m2_antihorario": 0b11011011,       # ~0b00011000
+    "m3_horario": 0b11111010,           # ~0b00001001  
+    "m3_antihorario": 0b11110110,       # ~0b00000101
+    "m4_horario": 0b11011011,           # ~0b00100100
+    "m4_antihorario": 0b11100111,       # ~0b00011000
+}
+
+# ========================
+# CONFIGURACIÓN DE SISTEMA
+# ========================
+HEARTBEAT_INTERVAL = 30                 # segundos
+RECONNECT_DELAY = 5                     # segundos
+MAX_RECONNECT_ATTEMPTS = 10             
+
+# ========================
+# CONFIGURACIÓN DE MOVIMIENTOS
+# ========================
+ROBOT_MOVEMENTS = {
+    "lateral_superior_izquierda": {
+        "M1": {"pwm": 1023, "direction": "horario"},
+        "M2": {"pwm": 1023, "direction": "horario"}, 
+        "M3": {"pwm": 420, "direction": "horario"},
+        "M4": {"pwm": 420, "direction": "horario"}
+    },
+    "lateral_superior_derecha": {
+        "M1": {"pwm": 420, "direction": "horario"},
+        "M2": {"pwm": 420, "direction": "horario"},
+        "M3": {"pwm": 1023, "direction": "horario"},
+        "M4": {"pwm": 1023, "direction": "horario"}
+    },
+    "lateral_inferior_izquierda": {
+        "M1": {"pwm": 1023, "direction": "antihorario"},
+        "M2": {"pwm": 1023, "direction": "antihorario"},
+        "M3": {"pwm": 420, "direction": "antihorario"},
+        "M4": {"pwm": 420, "direction": "antihorario"}
+    },
+    "lateral_inferior_derecha": {
+        "M1": {"pwm": 420, "direction": "antihorario"},
+        "M2": {"pwm": 420, "direction": "antihorario"},
+        "M3": {"pwm": 1023, "direction": "antihorario"},
+        "M4": {"pwm": 1023, "direction": "antihorario"}
+    },
+    "adelante": {
+        "M1": {"pwm": 1023, "direction": "horario"},
+        "M2": {"pwm": 1023, "direction": "horario"},
+        "M3": {"pwm": 1023, "direction": "horario"},
+        "M4": {"pwm": 1023, "direction": "horario"}
+    },
+    "atras": {
+        "M1": {"pwm": 1023, "direction": "antihorario"},
+        "M2": {"pwm": 1023, "direction": "antihorario"},
+        "M3": {"pwm": 1023, "direction": "antihorario"},
+        "M4": {"pwm": 1023, "direction": "antihorario"}
+    },
+    "derecha": {
+        "M1": {"pwm": 1023, "direction": "horario"},
+        "M2": {"pwm": 1023, "direction": "horario"},
+        "M3": {"pwm": 1023, "direction": "antihorario"},
+        "M4": {"pwm": 1023, "direction": "antihorario"}
+    },
+    "izquierda": {
+        "M1": {"pwm": 1023, "direction": "antihorario"},
+        "M2": {"pwm": 1023, "direction": "antihorario"},
+        "M3": {"pwm": 1023, "direction": "horario"},
+        "M4": {"pwm": 1023, "direction": "horario"}
+    },
+    "stop": {
+        "M1": {"pwm": 0, "direction": "horario"},
+        "M2": {"pwm": 0, "direction": "horario"},
+        "M3": {"pwm": 0, "direction": "horario"},
+        "M4": {"pwm": 0, "direction": "horario"}
+    }
+}
+
+# Mapeo de comandos alternativos
+COMMAND_MAPPING = {
+    "parar": "stop",
+    "detener": "stop",
+    "forward": "adelante",
+    "backward": "atras",
+    "back": "atras",
+    "left": "izquierda",
+    "right": "derecha"
+}
+
+# ========================
+# CONFIGURACIONES DE SEGURIDAD
+# ========================
+SAFETY_CONFIG = {
+    # Robot
+    "max_pwm": 1023,
+    "min_pwm": 0,
+    "emergency_stop_enabled": True,
+    "auto_stop_timeout": 30,
+    "watchdog_enabled": False,
+    "obstacle_distance": 5,  # cm - distancia mínima para detenerse automáticamente
+    
+    # Sensores
+    "max_sensor_read_errors": 5,
+    "auto_reconnect": True,
+    
+    # MQ-2 (Gas/Humo)
+    "max_adc_value": 32767,
+    "min_adc_value": -32768,
+    "voltage_reference": 4.096,
+    "gas_emergency_stop": True,  # Detener robot si se detecta humo crítico
+    "gas_alert_threshold": "peligro"  # Nivel que activa parada de emergencia
+}
+
+# ========================
+# DIRECCIONES I2C RESUMEN
+# ========================
+# Para referencia rápida de todos los dispositivos I2C:
+I2C_DEVICES = {
+    "PCF8574_IZ": 0x20,     # Motores IZ
+    "PCF8574_DE": 0x24,     # Motores DE
+    "ULTRASONIC": 0x26,     # Sensor ultrasónico (Board CAM)
+    "ADS1115": 0x48,        # Conversor ADC para sensor MQ-2
+    "SCD30": 0x61,          # Sensor CO2, temperatura, humedad
+    "MPU6050": 0x68         # Sensor inercial (acelerómetro/giroscopio)
+}
+
+# ========================
+# CONFIGURACIÓN DE ALERTAS
+# ========================
+ALERT_CONFIG = {
+    "gas_alert_enabled": True,
+    "gas_alert_repeat_interval": 10,  # segundos entre alertas repetidas
+    "obstacle_alert_enabled": True,
+    "obstacle_alert_distance": 10,  # cm
+    "system_alerts_enabled": True
+}
+
+# ========================
+# REFERENCIAS DE NIVELES DE HUMO
+# ========================
+# Valores de referencia para interpretar lecturas de humo en PPM
+SMOKE_REFERENCE_VALUES = {
+    "aire_limpio": "0-100 PPM",
+    "oficina_normal": "50-150 PPM",
+    "cocina_con_tostadas": "300-600 PPM",
+    "habitacion_con_fumador": "400-800 PPM",
+    "incendio_electrico_inicial": "800-1500 PPM",
+    "incendio_materiales": "2000+ PPM",
+    "rango_minimo_deteccion": "100 PPM",
+    "rango_maximo_medicion": "10000 PPM",
+    "rango_optimo": "200-5000 PPM"
+}

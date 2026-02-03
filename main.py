@@ -49,11 +49,17 @@ app.layout = get_layout()
 # WEBCAM SERVER (Simulation Mode)
 # ═══════════════════════════════════════════════════════════════════════════════
 def gen_frames():
-    cap = cv2.VideoCapture(0)
+    # Use CAP_DSHOW for better compatibility on Windows
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    if not cap.isOpened():
+        state.log("Error: No se pudo abrir la cámara local para simulación", "ERROR")
+        return
+
     try:
         while True:
             success, frame = cap.read()
             if not success:
+                state.log("Error: Fallo al leer frame de cámara local", "ERROR")
                 break
             else:
                 cv2.putText(frame, "SIMULATION MODE - LOCAL CAMERA", (10, 30), 

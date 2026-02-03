@@ -26,14 +26,15 @@ def on_mqtt_connect(client, userdata, flags, rc, properties=None):
         state.status["connection"] = "ONLINE"
         state.status["mode"] = "MQTT"
         topics = [
-            ("iot/sensor/mq2/data", 0),
-            ("iot/sensor/mq2/alert", 0),
-            ("hermes/sensors/environment", 0),
-            ("hermes/sensors/power", 0),
-            ("hermes/sensors/imu", 0),
-            ("hermes/ai/audio", 0),
-            ("hermes/position", 0),
-            ("hermes/radar", 0)
+            (MQTTTopics.MQ2_DATA, 0),
+            (MQTTTopics.MQ2_ALERT, 0),
+            (MQTTTopics.ENVIRONMENT, 0),
+            (MQTTTopics.IMU, 0),
+            (MQTTTopics.ULTRASONIC, 0),
+            (MQTTTopics.AUDIO, 0),
+            (MQTTTopics.POSITION, 0),
+            (MQTTTopics.RADAR, 0),
+            (MQTTTopics.STATUS, 0)
         ]
         for topic, qos in topics:
             client.subscribe(topic, qos)
@@ -50,7 +51,7 @@ def on_mqtt_message(client, userdata, msg):
         payload = json.loads(msg.payload.decode())
         topic = msg.topic
         
-        if "iot/sensor/mq2/data" in topic:
+        if MQTTTopics.MQ2_DATA in topic:
             sensor_data = payload.get("sensor_data", {})
             ppm = sensor_data.get("ppm", 0)
             volt = sensor_data.get("voltage", 0)
@@ -59,32 +60,40 @@ def on_mqtt_message(client, userdata, msg):
             state.add_gas_reading(state.robot_position["x"], state.robot_position["y"], ppm)
             
             status = sensor_data.get("alert_status", "normal").lower()
-            state.status["alert_level"] = "CRITICAL" if status != "normal" else "NORMAL"
+            if status == "critico":
+                state.status["alert_level"] = "CRITICAL"
+            elif status in ["peligro", "advertencia"]:
+                state.status["alert_level"] = "WARNING"
+            else:
+                state.status["alert_level"] = "NORMAL"
 
-        elif "iot/sensor/mq2/alert" in topic:
+        elif MQTTTopics.MQ2_ALERT in topic:
             state.log(f"ALERTA MQ-2: {payload.get('message')}", "WARN")
                 
-        elif "sensors/environment" in topic:
-            state.update_sensor_data(co2=payload.get("co2"), temp=payload.get("temperature"), hum=payload.get("humidity"))
+        elif MQTTTopics.ENVIRONMENT in topic:
+            state.update_sensor_data(
+                co2=payload.get("co2"), 
+                temp=payload.get("temperature"), 
+                hum=payload.get("humidity")
+            )
             
-        elif "sensors/power" in topic:
+        elif MQTTTopics.POWER in topic or "sensors/power" in topic:
             state.update_sensor_data(volt=payload.get("voltage"), curr=payload.get("current"))
             state.current_values["rssi"] = payload.get("rssi", -50)
             
-        elif "sensors/imu" in topic:
+        elif MQTTTopics.IMU in topic:
+            # Sync with MPU6050Manager format from main (1).py
             state.imu.update(payload)
             
-        elif "ai/audio" in topic:
-            cls = payload.get("class", "UNKNOWN")
-            conf = payload.get("confidence", 0) * 100
-            state.add_acoustic_detection(cls, conf, payload.get("direction"))
-            if cls in ["SCREAM", "BREATHING", "VOICE"]:
-                state.log(f"Detección acústica: {cls} ({conf:.1f}%)", "DETECT")
+        elif MQTTTopics.ULTRASONIC in topic:
+            dist = payload.get("distance_cm")
+            if dist is not None:
+                state.current_values["ultrasonic"] = dist
                 
-        elif "position" in topic:
+        elif MQTTTopics.POSITION in topic:
             state.update_robot_position(payload.get("x", 25), payload.get("y", 25), payload.get("theta", 0))
             
-        elif "radar" in topic:
+        elif MQTTTopics.RADAR in topic:
             if "distances" in payload:
                 state.radar_distances = np.array(payload["distances"])
                 
