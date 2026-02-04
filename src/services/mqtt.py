@@ -45,7 +45,7 @@ def publish_command(topic, payload):
             payload["v"] = PROTOCOL_VERSION # Inyectar versión
             payload = json.dumps(payload)
         
-        result = mqtt_client.publish(topic, payload, qos=1)
+        result = mqtt_client.publish(topic, payload, qos=0)
         
         if result.rc == mqtt.MQTT_ERR_SUCCESS:
             return True

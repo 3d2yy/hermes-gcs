@@ -3,13 +3,13 @@ import os
 
 def load_config():
     default_config = {
-        "mqtt_broker": "192.168.2.103",
+        "mqtt_broker": "localhost",
         "mqtt_port": 1883,
-        "mqtt_user": "hermes_robot",
-        "mqtt_pass": "hermes_password",
+        "mqtt_user": "YOUR_MQTT_USER",
+        "mqtt_pass": "YOUR_MQTT_PASSWORD",
         "protocol_version": "2.2",
-        "robot_ip": "192.168.2.100", # Main ESP32 (Motors/Sensors)
-        "camera_ip": "192.168.2.101", # ESP32-CAM
+        "robot_ip": "192.168.1.XXX", # Main ESP32 (Motors/Sensors)
+        "camera_ip": "192.168.1.XXX", # ESP32-CAM
         "camera_port": 81
     }
     try:

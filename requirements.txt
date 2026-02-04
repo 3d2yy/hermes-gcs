@@ -1,0 +1,6 @@
+dash
+dash-mantine-components
+dash-iconify
+paho-mqtt
+numpy
+opencv-python

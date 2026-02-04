@@ -114,27 +114,41 @@ def get_layout():
                     html.Div(id="view-container")
                 ]),
             ]),
-            dcc.Interval(id="interval-fast", interval=500),
+            dcc.Interval(id="interval-fast", interval=200),
             dcc.Interval(id="interval-slow", interval=2000),
             dcc.Store(id="current-view", data="teleop"),
             
-            # --- CONNECTION MODAL ---
             dmc.Modal(
                 id="connection-modal",
-                opened=True, # Open by default on load
+                opened=True, 
                 closeOnClickOutside=False,
                 closeOnEscape=False,
                 withCloseButton=False,
                 centered=True,
-                title="Conexión Hermes GCS",
+                title="🚀 Conexión Inteligente HERMES",
                 children=[
-                    dmc.Text("Ingrese las direcciones IP para conectar.", size="sm", c="dimmed", style={"marginBottom": 16}),
-                    dmc.TextInput(id="input-broker-ip", label="MQTT Broker / Robot IP", value=CONFIG["mqtt_broker"], style={"marginBottom": 10}),
-                    dmc.TextInput(id="input-camera-ip", label="Cámara IP (ESP32-CAM)", value=CONFIG.get("camera_ip", CONFIG["mqtt_broker"]), style={"marginBottom": 20}),
-                    
-                    dmc.Group(justify="flex-end", gap="sm", children=[
-                        dmc.Button("Modo Simulado", id="btn-simulate", variant="subtle", color="gray"),
-                        dmc.Button("Conectar", id="btn-connect-system", color="teal"),
+                    dmc.Stack(children=[
+                        dmc.Alert(
+                            "Sistema mDNS Activo: El robot será detectado automáticamente por su nombre en la red.",
+                            title="Modo Inteligente",
+                            color="teal",
+                            variant="light",
+                            icon=DashIconify(icon="mdi:auto-fix")
+                        ),
+                        dmc.Text([
+                            "Broker: ", html.B("Geeklab.local"), html.Br(),
+                            "Robot: ", html.B("hermes-robot.local")
+                        ], size="sm", c="dimmed"),
+                        
+                        # Hidden inputs for callback compatibility (can be removed if callbacks are updated)
+                        html.Div(style={"display": "none"}, children=[
+                            dmc.TextInput(id="input-broker-ip", value=CONFIG["mqtt_broker"]),
+                            dmc.TextInput(id="input-camera-ip", value=CONFIG.get("camera_ip", CONFIG["mqtt_broker"])),
+                        ]),
+                        
+                        dmc.Group(justify="flex-end", gap="sm", children=[
+                            dmc.Button("Iniciar Conexión", id="btn-connect-system", color="teal", fullWidth=True),
+                        ])
                     ])
                 ]
             )

@@ -249,6 +249,10 @@ class HermesRobot:
         """Mantiene conexión WiFi y MQTT."""
         wlan = network.WLAN(network.STA_IF)
         wlan.active(True)
+        try:
+            wlan.config(dhcp_hostname="hermes-robot")
+        except:
+            pass # Algunos firmwares no soportan esto
         
         client_id = ubinascii.hexlify(unique_id()).decode()
         
@@ -256,18 +260,27 @@ class HermesRobot:
             try:
                 # ===== CONEXIÓN WIFI =====
                 if not wlan.isconnected():
-                    print(f"[WIFI] Connecting to {WIFI_SSID}...")
-                    wlan.connect(WIFI_SSID, WIFI_PASSWORD)
+                    log("Searching for known WiFi networks...", "INFO")
+                    networks = wlan.scan()
+                    found_ssids = [n[0].decode() for n in networks]
                     
-                    timeout = WIFI_TIMEOUT
-                    while not wlan.isconnected() and timeout > 0:
-                        await asyncio.sleep(1)
-                        timeout -= 1
-                        
-                    if wlan.isconnected():
-                        print(f"[WIFI] Connected: {wlan.ifconfig()[0]}")
-                    else:
-                        print("[WIFI] Connection timeout, retrying...")
+                    for net in WIFI_NETWORKS:
+                        ssid = net["ssid"]
+                        if ssid in found_ssids:
+                            log(f"Connecting to {ssid}...", "INFO")
+                            wlan.connect(ssid, net["pass"])
+                            
+                            timeout = WIFI_TIMEOUT
+                            while not wlan.isconnected() and timeout > 0:
+                                await asyncio.sleep(1)
+                                timeout -= 1
+                                
+                            if wlan.isconnected():
+                                log(f"Connected to {ssid}! IP: {wlan.ifconfig()[0]}", "SUCCESS")
+                                break
+                    
+                    if not wlan.isconnected():
+                        log("No known networks found, retrying in 5s...", "WARN")
                         await asyncio.sleep(5)
                         continue
                 
@@ -316,7 +329,7 @@ class HermesRobot:
                 print(f"[NET] Error: {e}")
                 self.connected = False
                 
-            await asyncio.sleep_ms(50)
+            await asyncio.sleep_ms(10) # 10ms = 100Hz polling rate
 
     def _mqtt_callback(self, topic, msg):
         """Callback para mensajes MQTT recibidos."""
@@ -416,7 +429,7 @@ class HermesRobot:
                     correction = self.pid.compute(self.yaw)
                     
                     # Aplicar corrección diferencial
-                    base_speed = 800  # PWM base (no máximo para tener margen)
+                    base_speed = 1000  # PWM aumentado para mayor velocidad (max 1023)
                     max_correction = 200
                     correction = max(-max_correction, min(max_correction, correction))
                     

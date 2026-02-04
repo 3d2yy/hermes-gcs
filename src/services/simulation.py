@@ -11,8 +11,8 @@ def simulation_thread():
     
     t = 0
     while True:
-        # Stop simulation if Connected or in Replay mode
-        if state.status["connection"] == "ONLINE" or state.status["mode"] == "REPLAY":
+        # Stop simulation if Connected, Replay or Connecting
+        if state.status["connection"] in ["ONLINE", "CONNECTING..."] or state.status["mode"] == "REPLAY":
             time.sleep(1)
             continue
 

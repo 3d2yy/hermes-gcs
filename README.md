@@ -1,45 +1,60 @@
 # H.E.R.M.E.S. - Ground Control Station & Robot Firmware
 **Hostile Environment Reconnaissance - Micro-controlled Execution System**
 
-H.E.R.M.E.S. es un sistema avanzado de exploración y monitoreo ambiental basado en ESP32 y una estación de control en tierra (GCS) desarrollada en Python/Dash. Diseñado para misiones de reconocimiento en entornos peligrosos.
+H.E.R.M.E.S. es un sistema avanzado de exploración robótica diseñado para monitoreo ambiental y reconocimiento en entornos peligrosos. Combina un robot basado en ESP32 con una Estación de Control en Tierra (GCS) moderna construida en Python.
 
 ## ✨ Características Principales
-- **Teleoperación Multi-modo**: Control manual, diferencial y PID.
-- **Detección de Amenazas**: Sensor de gas/humo MQ-2 con alertas en tiempo real.
-- **Monitoreo Ambiental**: Sensor SCD30 para CO2, humedad y temperatura.
-- **Control de Estabilidad**: Algoritmos PID integrados con el MPU6050 para navegación recta.
-- **Seguridad Robusta**: Autenticación MQTT y versionado de protocolo (v2.2).
-- **Logs Inteligentes**: Sistema de logging estructurado con iconos para facilitar el debug.
+- **Telepresencia**: Video en tiempo real vía ESP32-CAM.
+- **Sensores Avanzados**: Detección de gases (MQ-2), CO2, temperatura y humedad (SCD30).
+- **Navegación Estable**: Control PID asistido por giroscopio (MPU6050).
+- **Control Total**: Interfaz Dash responsiva para teleoperación manual.
+- **Seguridad**: Protocolo MQTT v2.2 con autenticación y "watchdog" de seguridad.
+
+---
+
+## 🚀 Guía de Inicio Rápido (GCS)
+
+### 1. Requisitos Previos
+- Python 3.9+
+- Servidor MQTT (Mosquitto) corriendo.
+
+### 2. Instalación
+```bash
+# Instalar dependencias
+pip install -r requirements.txt
+```
+
+### 3. Ejecución
+```bash
+python main.py
+```
+Abre tu navegador en `http://localhost:8050`.
+
+---
+
+## 🔧 Configuración del Hardware
+
+Para construir y configurar tu propio robot H.E.R.M.E.S., sigue estas guías detalladas:
+
+1. **[Configuración del Servidor MQTT](setup/GUIDE_MOSQUITTO.md)**: El corazón de las comunicaciones.
+2. **[Configuración del Robot (ESP32)](setup/GUIDE_ESP32.md)**: Flasheo de MicroPython y carga de código.
+3. **[Configuración de la Cámara (ESP32-CAM)](setup/GUIDE_ESP32_CAM.md)**: Programación del módulo de video.
+
+### ⚠️ Notas de Seguridad para Desarrollo
+Este repositorio no incluye credenciales reales.
+- **ESP32 Firmware**: Debes crear `firmware/secrets.py` basado en tus claves reales (ver guía).
+- **ESP32-CAM**: Debes editar `ESP32_CAM.ino` antes de subirlo.
+- **GCS**: Edita `src/config.py` o crea un `config.json` local.
+
+---
 
 ## 📁 Estructura del Proyecto
 - **/firmware**: Código para el ESP32 (MicroPython).
-  - `main.py`: Loop principal de control asíncrono con `uasyncio`.
-  - `drivers.py`: Abstracción de hardware para sensores y motores.
-  - `config.py`: Configuración unificada de pines, red y seguridad.
-  - `pid.py`: Implementación del controlador PID.
-  - `MPU6050.py`: Driver para el sensor inercial.
+  - `main.py`: Cerebro del robot.
+  - `drivers.py`: Controladores de hardware.
+  - `secrets.py`: (GitIgnored) Tus claves privadas.
 - **/src**: Código de la Estación de Control (GCS).
-  - `/services`: Servicios de comunicación MQTT y procesamiento de datos.
-  - `/ui`: Interfaz gráfica moderna basada en Dash/Plotly.
-  - `main.py`: Punto de entrada del servidor GCS.
-
-## 🚀 Versión 2.2 - Mejoras de Seguridad y Estabilidad
-La versión actual introduce:
-- **MQTT Auth**: Seguridad por usuario/contraseña obligatoria.
-- **Recalibración Remota**: Comando `CALIBRATE` para resetear el IMU vía aire.
-- **Optimizaciones Asíncronas**: Mejor rendimiento en el control de motores (50Hz) y lectura de sensores.
-- **Fusión de Datos**: Los sensores MQ-2 y SCD30 trabajan coordinados para identificar tipos de amenazas.
-
-## 🔧 Instalación
-Consulte la [GUÍA DE INSTALACIÓN](INSTRUCCIONES_INSTALACION.md) para configurar su hardware y software.
-
----
-
-## 📈 Roadmap (Innovación Futura)
-- [ ] **Data Science**: Mapas de calor (Heatmaps) de concentraciones de gas en tiempo real.
-- [ ] **Edge AI**: Detección de tipos de terreno mediante vibraciones (TinyML).
-- [ ] **Modularidad**: Integración con Raspberry Pi 4 y ROS2.
-- [ ] **Visión**: Superposición de telemetría (OSD) sobre el video de la cámara.
-
----
-*Desarrollado para misiones de exploración avanzada - 2026*
+  - `/services`: Lógica de MQTT y simulaciones.
+  - `/ui`: Interfaz gráfica (Dash).
+- **/camera_firmware**: Código C++ para ESP32-CAM.
+- **/setup**: Guías y scripts de configuración.

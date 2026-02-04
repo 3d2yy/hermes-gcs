@@ -13,19 +13,21 @@ LOCATION = "Lab-Principal"
 PROTOCOL_VERSION = "2.2"  # Versión del protocolo de comunicación
 
 # ========================
-# CONFIGURACIÓN WIFI
+# CONFIGURACIÓN WIFI Y MQTT (SECRETOS)
 # ========================
-WIFI_SSID = "ROBMA"
-WIFI_PASSWORD = "ROBMA2023"
-WIFI_TIMEOUT = 30  # segundos
+try:
+    from secrets import WIFI_NETWORKS, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASSWORD
+    print("[CONFIG] Secrets loaded successfully")
+except ImportError:
+    print("[CONFIG] Secrets not found. Using defaults (Change these!)")
+    WIFI_NETWORKS = [
+        {"ssid": "TU_WIFI_SSID", "pass": "TU_WIFI_PASSWORD"},
+    ]
+    MQTT_BROKER = "192.168.1.XXX"
+    MQTT_PORT = 1883
+    MQTT_USER = "tu_usuario"
+    MQTT_PASSWORD = "tu_password"
 
-# ========================  
-# CONFIGURACIÓN MQTT
-# ========================
-MQTT_BROKER = "192.168.2.103"
-MQTT_PORT = 1883                        
-MQTT_USER = "hermes_robot"     # CAMBIAR SEGÚN TU BROKER
-MQTT_PASSWORD = "hermes_password" # CAMBIAR SEGÚN TU BROKER
 MQTT_KEEPALIVE = 180  # segundos
 
 # ========================
@@ -74,13 +76,13 @@ PWM_FREQUENCY = 1000
 # Direcciones I2C PCF8574 (Control de dirección de motores)
 PCF8574_ADDRESSES = {
     1: 0x20,  # PCF1 - Motores IZ (1 y 2)
-    2: 0x24   # PCF2 - Motores DE (3 y 4)
+    2: 0x21   # PCF2 - Motores DE (3 y 4)
 }
 
 # ========================
 # CONFIGURACIÓN SENSOR ULTRASÓNICO
 # ========================
-ULTRASONIC_ADDR = 0x26  # Dirección I2C del sensor (En ESP32-CAM Board)
+ULTRASONIC_ADDR = 0x23  # Dirección I2C del sensor (En ESP32-CAM Board)
 TRIG_BIT = 6            # Bit P6 para el trigger
 ECHO_BIT = 5            # Bit P5 para el echo
 SOUND_SPEED = 0.0343    # cm/μs
@@ -266,8 +268,8 @@ SAFETY_CONFIG = {
 # Para referencia rápida de todos los dispositivos I2C:
 I2C_DEVICES = {
     "PCF8574_IZ": 0x20,     # Motores IZ
-    "PCF8574_DE": 0x24,     # Motores DE
-    "ULTRASONIC": 0x26,     # Sensor ultrasónico (Board CAM)
+    "PCF8574_DE": 0x21,     # Motores DE
+    "ULTRASONIC": 0x23,     # Sensor ultrasónico (Board CAM)
     "ADS1115": 0x48,        # Conversor ADC para sensor MQ-2
     "SCD30": 0x61,          # Sensor CO2, temperatura, humedad
     "MPU6050": 0x68         # Sensor inercial (acelerómetro/giroscopio)

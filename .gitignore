@@ -74,9 +74,10 @@ ESP32-CAM (1).pdf
 ESP32-WROOM (1).pdf
 
 # Unused Camera Firmware / Temp files
-ESP32_CAM.ino
-app_httpd.cpp
-camera_index.h
-camera_pins.h
-board_config.h
-ci.json
+# ESP32_CAM.ino -> Se incluye para el repo
+# app_httpd.cpp -> Se incluye
+# ...
+
+# Secrets
+firmware/secrets.py
+src/secrets.py

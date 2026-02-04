@@ -15,7 +15,7 @@ try:
     SCIPY_AVAILABLE = True
 except ImportError:
     SCIPY_AVAILABLE = False
-    print("⚠️ scipy not installed. Gas heatmap interpolation will be basic.")
+    print("WARNING: scipy not installed. Gas heatmap interpolation will be basic.")
 
 # Import internal modules
 from src.config import CONFIG, CAMERA_PORT
@@ -151,13 +151,12 @@ def fast_update_global(n):
 @app.callback(
     Output("connection-modal", "opened"),
     Input("btn-connect-system", "n_clicks"),
-    Input("btn-simulate", "n_clicks"),
     Input("btn-reopen-modal", "n_clicks"),
     State("input-broker-ip", "value"),
     State("input-camera-ip", "value"),
     prevent_initial_call=True
 )
-def handle_connection(n_connect, n_simulate, n_reopen, broker_ip, camera_ip):
+def handle_connection(n_connect, n_reopen, broker_ip, camera_ip):
     ctx = dash.callback_context
     if not ctx.triggered: return dash.no_update
     btn_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -165,16 +164,14 @@ def handle_connection(n_connect, n_simulate, n_reopen, broker_ip, camera_ip):
     if btn_id == "btn-reopen-modal":
         return True
     
-    if btn_id == "btn-simulate":
-        state.log("Iniciando Modo Simulado", "INFO")
-        state.status["connection"] = "SIMULATED"
-        start_simulation()
-        return False
+    if btn_id == "btn-reopen-modal":
+        return True
         
     if btn_id == "btn-connect-system":
         if not broker_ip: return dash.no_update
         state.log(f"Conectando a {broker_ip}...", "INFO")
         state.status["connection"] = "CONNECTING..."
+        state.status["mode"] = "CONNECTING"
         
         # Update Runtime Config
         CONFIG["mqtt_broker"] = broker_ip
@@ -293,13 +290,13 @@ def update_sensor_statistics(n):
 # ═══════════════════════════════════════════════════════════════════════════════
 # ROBOT CONTROL
 # ═══════════════════════════════════════════════════════════════════════════════
+
 @app.callback(Output("btn-stop", "n_clicks"),
     [Input("btn-forward", "n_clicks"), Input("btn-backward", "n_clicks"),
      Input("btn-left", "n_clicks"), Input("btn-right", "n_clicks")],
     prevent_initial_call=True)
 def control_robot(*args):
     if state.status["mode"] in ["SIMULACIÓN", "REPLAY", "REPLAY FILE"]:
-        state.log("Control ignorado (modo simulación/replay)", "WARN")
         return dash.no_update
     ctx = callback_context
     if not ctx.triggered:
@@ -564,7 +561,7 @@ def update_teleop_metrics(n):
     prevent_initial_call=True
 )
 def update_video_source(n, current_src):
-    is_sim = state.status["mode"] in ["SIMULACIÓN", "REPLAY FILE", "ESPERANDO", "SIMULATED"]
+    is_sim = state.status["mode"] == "SIMULATED"
     # Use CONFIG dictionary to get current IPs instead of stale constants
     target_ip = CONFIG.get("camera_ip", CONFIG.get("mqtt_broker", "127.0.0.1"))
     target_src = "/video_feed_local" if is_sim else f"http://{target_ip}:{CAMERA_PORT}/stream"
@@ -581,6 +578,6 @@ if __name__ == "__main__":
     # if CONFIG["mqtt_broker"]:
     #     threading.Thread(target=start_mqtt, daemon=True).start()
     
-    print("🚀 H.E.R.M.E.S. Ground Control Station v2.0 (Modular) Starting...")
+    print("H.E.R.M.E.S. Ground Control Station v2.0 (Modular) Starting...")
     print("Waiting for Connection Modal input...")
     app.run(debug=True, port=8050)

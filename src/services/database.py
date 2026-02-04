@@ -40,7 +40,7 @@ class DatabaseManager:
             conn.commit()
             conn.close()
         except Exception as e:
-            print(f"❌ DB Init Error: {e}")
+            print(f"DB Init Error: {e}")
 
     def add_sensor_data(self, ppm, co2, temp, hum, volt, curr):
         data = {
@@ -59,7 +59,7 @@ class DatabaseManager:
         self.queue.put(data)
 
     def _worker(self):
-        print("💾 Database Manager started.")
+        print("Database Manager started.")
         while self.running:
             try:
                 # Get a batch of items
@@ -106,7 +106,7 @@ class DatabaseManager:
                     self.queue.task_done()
 
             except Exception as e:
-                print(f"❌ DB Worker Error: {e}")
+                print(f"DB Worker Error: {e}")
 
 # Initialize global DB manager
 db_manager = DatabaseManager()
